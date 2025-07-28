@@ -1,143 +1,82 @@
-"use strict";
+const keywordInput = document.getElementById('keywordInput');
+const searchBtn = document.getElementById('searchBtn');
+const results = document.getElementById('results');
+const loading = document.getElementById('loading');
+const resultCount = document.getElementById('resultCount');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
+const memberMin = document.getElementById('memberMin');
+const memberMax = document.getElementById('memberMax');
 
-const apiBaseUrl = "https://line-tool.ame-x.net/api/@/search";
-const searchBtn = document.getElementById("searchBtn");
-const keywordInput = document.getElementById("keywordInput");
-const resultsContainer = document.getElementById("results");
-const loadingElem = document.getElementById("loading");
-const loadMoreBtn = document.getElementById("loadMoreBtn");
-const resultCountElem = document.getElementById("resultCount");
-const memberMinInput = document.getElementById("memberMin");
-const memberMaxInput = document.getElementById("memberMax");
-const toggleFilterBtn = document.getElementById("toggleFilterBtn");
-const filterSection = document.getElementById("filterSection");
+let allResults = [];
+let currentIndex = 0;
+const PAGE_SIZE = 10;
 
-let currentResults = [];
-let displayCount = 0;
-const pageSize = 20;
-let filterEnabled = true;
-
-toggleFilterBtn.addEventListener("click", () => {
-  filterEnabled = !filterEnabled;
-  filterSection.style.display = filterEnabled ? "flex" : "none";
-  toggleFilterBtn.textContent = filterEnabled ? "フィルターON" : "フィルターOFF";
-});
-
-function createRoomCard(room) {
-  const card = document.createElement("a");
-  card.className = "room-card";
-  card.href = `line://square/join?emid=${room.square.emid}`;
-  card.target = "_blank";
-  card.rel = "noopener noreferrer";
-
-  const img = document.createElement("img");
-  img.src = `https://obs.line-scdn.net/${room.square.profileImageObsHash}/preview.100x100`;
-  img.alt = `${room.square.name} アイコン`;
-  img.onerror = () => {
-    img.src = "https://via.placeholder.com/100?text=No+Image";
-  };
-
-  const info = document.createElement("div");
-  info.className = "room-info";
-
-  const name = document.createElement("div");
-  name.className = "room-name";
-  name.textContent = room.square.name;
-
-  const desc = document.createElement("div");
-  desc.className = "room-desc";
-  desc.textContent = room.square.desc || "(説明なし)";
-
-  const members = document.createElement("div");
-  members.className = "room-members";
-  members.textContent = `メンバー数: ${room.memberCount}`;
-
-  info.appendChild(name);
-  info.appendChild(desc);
-  info.appendChild(members);
-
-  card.appendChild(img);
-  card.appendChild(info);
-
-  return card;
-}
-
-function filterResults(results) {
-  if (!filterEnabled) return results;
-  const min = parseInt(memberMinInput.value) || 0;
-  const max = parseInt(memberMaxInput.value) || Number.MAX_SAFE_INTEGER;
-  return results.filter(r => r.memberCount >= min && r.memberCount <= max);
-}
-
-function renderResults(reset = false) {
-  if (reset) {
-    resultsContainer.innerHTML = "";
-    displayCount = 0;
-  }
-
-  const filtered = filterResults(currentResults);
-  const toDisplay = filtered.slice(displayCount, displayCount + pageSize);
-
-  toDisplay.forEach(room => {
-    const card = createRoomCard(room);
-    resultsContainer.appendChild(card);
-  });
-
-  displayCount += toDisplay.length;
-
-  resultCountElem.textContent = `検索結果: ${filtered.length}件`;
-
-  if (displayCount >= filtered.length) {
-    loadMoreBtn.classList.add("hidden");
-  } else {
-    loadMoreBtn.classList.remove("hidden");
-  }
-}
+searchBtn.addEventListener('click', () => search());
+loadMoreBtn.addEventListener('click', showMore);
 
 async function search() {
   const keyword = keywordInput.value.trim();
-  if (!keyword) {
-    alert("検索ワードを入力してください");
-    return;
-  }
-  searchBtn.disabled = true;
-  resultsContainer.innerHTML = "";
-  resultCountElem.textContent = "";
-  loadMoreBtn.classList.add("hidden");
-  loadingElem.classList.remove("hidden");
+  if (!keyword) return;
+
+  loading.classList.remove('hidden');
+  results.innerHTML = '';
+  resultCount.textContent = '';
+  loadMoreBtn.classList.add('hidden');
 
   try {
-    const res = await fetch(`${apiBaseUrl}?query=${encodeURIComponent(keyword)}&limit=100`);
-    if (!res.ok) throw new Error("検索に失敗しました");
-
+    const res = await fetch(`https://line-tool.ame-x.net/api/@/search?query=${encodeURIComponent(keyword)}&limit=100`);
     const data = await res.json();
 
-    if (!Array.isArray(data) || data.length === 0) {
-      resultsContainer.innerHTML = "<p>検索結果がありませんでした。</p>";
-      resultCountElem.textContent = "検索結果: 0件";
-      currentResults = [];
-    } else {
-      currentResults = data;
-      renderResults(true);
-    }
-  } catch (err) {
-    resultsContainer.innerHTML = `<p style="color:red;">エラーが発生しました: ${err.message}</p>`;
+    // フィルター処理
+    const min = parseInt(memberMin.value) || 0;
+    const max = parseInt(memberMax.value) || Infinity;
+    allResults = data.filter(item => item.memberCount >= min && item.memberCount <= max);
+
+    resultCount.textContent = `${allResults.length}件見つかりました`;
+    currentIndex = 0;
+    showMore();
+  } catch (e) {
+    results.innerHTML = '<p>検索に失敗しました。</p>';
   } finally {
-    loadingElem.classList.add("hidden");
-    searchBtn.disabled = false;
+    loading.classList.add('hidden');
   }
 }
 
-searchBtn.addEventListener("click", () => search());
-keywordInput.addEventListener("keyup", e => {
-  if (e.key === "Enter") search();
-});
+function showMore() {
+  const slice = allResults.slice(currentIndex, currentIndex + PAGE_SIZE);
+  for (const item of slice) {
+    results.appendChild(createCard(item));
+  }
+  currentIndex += PAGE_SIZE;
+  if (currentIndex < allResults.length) {
+    loadMoreBtn.classList.remove('hidden');
+  } else {
+    loadMoreBtn.classList.add('hidden');
+  }
+}
 
-loadMoreBtn.addEventListener("click", () => renderResults());
+function createCard(item) {
+  const div = document.createElement('div');
+  div.className = 'room-card';
 
-memberMinInput.addEventListener("input", () => {
-  renderResults(true);
-});
-memberMaxInput.addEventListener("input", () => {
-  renderResults(true);
-});
+  const imgHash = item.square.profileImageObsHash;
+  const imgUrl = imgHash
+    ? `https://obs.line-scdn.net/${imgHash}/preview.100x100`
+    : 'https://via.placeholder.com/100';
+
+  div.innerHTML = `
+    <img src="${imgUrl}" alt="icon">
+    <div class="room-info">
+      <div>
+        <div class="room-name">${item.square.name}</div>
+        <div class="room-desc">${(item.square.desc || '').slice(0, 50)}...</div>
+        <div class="room-members">人数: ${item.memberCount}</div>
+      </div>
+      <a class="join-btn" href="line://square/join?emid=${item.square.emid}">
+        <img src="https://scdn.line-apps.com/n/line_add_friends/btn/ja.png" alt="LINE">
+        開く
+      </a>
+    </div>
+  `;
+  return div;
+}
