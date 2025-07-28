@@ -1,127 +1,143 @@
-const limit = 20;
+"use strict";
 
-let currentKeyword = '';
-let allResults = [];
-let displayedCount = 0;
-let loading = false;
+const apiBaseUrl = "https://line-tool.ame-x.net/api/@/search";
+const searchBtn = document.getElementById("searchBtn");
+const keywordInput = document.getElementById("keywordInput");
+const resultsContainer = document.getElementById("results");
+const loadingElem = document.getElementById("loading");
+const loadMoreBtn = document.getElementById("loadMoreBtn");
+const resultCountElem = document.getElementById("resultCount");
+const memberMinInput = document.getElementById("memberMin");
+const memberMaxInput = document.getElementById("memberMax");
+const toggleFilterBtn = document.getElementById("toggleFilterBtn");
+const filterSection = document.getElementById("filterSection");
 
-const resultsDiv = document.getElementById('results');
-const loadMoreBtn = document.getElementById('loadMoreBtn');
+let currentResults = [];
+let displayCount = 0;
+const pageSize = 20;
+let filterEnabled = true;
 
-function setLoadingMessage() {
-  resultsDiv.innerHTML = `
-    <div class="loading-container">
-      <div class="spinner"></div>
-      <div>検索中...</div>
-    </div>
-  `;
+toggleFilterBtn.addEventListener("click", () => {
+  filterEnabled = !filterEnabled;
+  filterSection.style.display = filterEnabled ? "flex" : "none";
+  toggleFilterBtn.textContent = filterEnabled ? "フィルターON" : "フィルターOFF";
+});
+
+function createRoomCard(room) {
+  const card = document.createElement("a");
+  card.className = "room-card";
+  card.href = `line://square/join?emid=${room.square.emid}`;
+  card.target = "_blank";
+  card.rel = "noopener noreferrer";
+
+  const img = document.createElement("img");
+  img.src = `https://obs.line-scdn.net/${room.square.profileImageObsHash}/preview.100x100`;
+  img.alt = `${room.square.name} アイコン`;
+  img.onerror = () => {
+    img.src = "https://via.placeholder.com/100?text=No+Image";
+  };
+
+  const info = document.createElement("div");
+  info.className = "room-info";
+
+  const name = document.createElement("div");
+  name.className = "room-name";
+  name.textContent = room.square.name;
+
+  const desc = document.createElement("div");
+  desc.className = "room-desc";
+  desc.textContent = room.square.desc || "(説明なし)";
+
+  const members = document.createElement("div");
+  members.className = "room-members";
+  members.textContent = `メンバー数: ${room.memberCount}`;
+
+  info.appendChild(name);
+  info.appendChild(desc);
+  info.appendChild(members);
+
+  card.appendChild(img);
+  card.appendChild(info);
+
+  return card;
 }
 
-function showMessage(message) {
-  resultsDiv.innerHTML = `<p style="text-align:center; color:#555;">${message}</p>`;
+function filterResults(results) {
+  if (!filterEnabled) return results;
+  const min = parseInt(memberMinInput.value) || 0;
+  const max = parseInt(memberMaxInput.value) || Number.MAX_SAFE_INTEGER;
+  return results.filter(r => r.memberCount >= min && r.memberCount <= max);
 }
 
-function createRoomElement(item) {
-  const name = item.square.name;
-  const desc = item.square.desc || '';
-  const members = item.memberCount;
-  const emid = item.square.emid;
-  const profileImageObsHash = item.square.profileImageObsHash || '';
-
-  const joinUrl = `line://square/join?emid=${emid}`;
-  const imgUrl = profileImageObsHash
-    ? `https://obs.line-scdn.net/${profileImageObsHash}/preview.100x100`
-    : 'https://via.placeholder.com/100?text=No+Image';
-
-  const div = document.createElement('div');
-  div.className = 'room';
-  div.innerHTML = `
-    <img src="${imgUrl}" alt="アイコン" />
-    <h3>${name}</h3>
-    <p>メンバー数: ${members}</p>
-    <p>${desc.length > 60 ? desc.slice(0, 60) + '...' : desc}</p>
-    <button class="join-btn">LINEで開く</button>
-  `;
-
-  div.querySelector('.join-btn').addEventListener('click', () => {
-    window.location.href = joinUrl;
-  });
-
-  return div;
-}
-
-async function performSearch(keyword) {
-  if (loading) return;
-  loading = true;
-  setLoadingMessage();
-
-  try {
-    const url = `https://line-tool.ame-x.net/api/@/search?query=${encodeURIComponent(keyword)}&limit=100`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('検索失敗');
-    const data = await res.json();
-
-    allResults = data || [];
-    displayedCount = 0;
-
-    if (allResults.length === 0) {
-      showMessage('結果が見つかりませんでした。');
-      loadMoreBtn.style.display = 'none';
-      loading = false;
-      return;
-    }
-
-    resultsDiv.innerHTML = '';
-    appendMoreResults();
-
-  } catch (e) {
-    console.error(e);
-    showMessage('検索に失敗しました。');
-    loadMoreBtn.style.display = 'none';
-  } finally {
-    loading = false;
+function renderResults(reset = false) {
+  if (reset) {
+    resultsContainer.innerHTML = "";
+    displayCount = 0;
   }
-}
 
-function appendMoreResults() {
-  const nextBatch = allResults.slice(displayedCount, displayedCount + limit);
-  nextBatch.forEach(item => {
-    resultsDiv.appendChild(createRoomElement(item));
+  const filtered = filterResults(currentResults);
+  const toDisplay = filtered.slice(displayCount, displayCount + pageSize);
+
+  toDisplay.forEach(room => {
+    const card = createRoomCard(room);
+    resultsContainer.appendChild(card);
   });
-  displayedCount += nextBatch.length;
 
-  if (displayedCount < allResults.length) {
-    loadMoreBtn.style.display = 'block';
+  displayCount += toDisplay.length;
+
+  resultCountElem.textContent = `検索結果: ${filtered.length}件`;
+
+  if (displayCount >= filtered.length) {
+    loadMoreBtn.classList.add("hidden");
   } else {
-    loadMoreBtn.style.display = 'none';
+    loadMoreBtn.classList.remove("hidden");
   }
 }
 
-document.getElementById('searchBtn').addEventListener('click', () => {
-  const keyword = document.getElementById('keyword').value.trim();
+async function search() {
+  const keyword = keywordInput.value.trim();
   if (!keyword) {
-    showMessage('検索ワードを入力してください。');
-    loadMoreBtn.style.display = 'none';
+    alert("検索ワードを入力してください");
     return;
   }
-  currentKeyword = keyword;
-  performSearch(keyword);
-});
+  searchBtn.disabled = true;
+  resultsContainer.innerHTML = "";
+  resultCountElem.textContent = "";
+  loadMoreBtn.classList.add("hidden");
+  loadingElem.classList.remove("hidden");
 
-document.getElementById('keyword').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    document.getElementById('searchBtn').click();
+  try {
+    const res = await fetch(`${apiBaseUrl}?query=${encodeURIComponent(keyword)}&limit=100`);
+    if (!res.ok) throw new Error("検索に失敗しました");
+
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      resultsContainer.innerHTML = "<p>検索結果がありませんでした。</p>";
+      resultCountElem.textContent = "検索結果: 0件";
+      currentResults = [];
+    } else {
+      currentResults = data;
+      renderResults(true);
+    }
+  } catch (err) {
+    resultsContainer.innerHTML = `<p style="color:red;">エラーが発生しました: ${err.message}</p>`;
+  } finally {
+    loadingElem.classList.add("hidden");
+    searchBtn.disabled = false;
   }
+}
+
+searchBtn.addEventListener("click", () => search());
+keywordInput.addEventListener("keyup", e => {
+  if (e.key === "Enter") search();
 });
 
-loadMoreBtn.addEventListener('click', () => {
-  if (loading) return;
-  appendMoreResults();
-});
+loadMoreBtn.addEventListener("click", () => renderResults());
 
-window.addEventListener('scroll', () => {
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const percent = (scrollTop / scrollHeight) * 100;
-  document.getElementById('scrollProgress').style.width = percent + '%';
+memberMinInput.addEventListener("input", () => {
+  renderResults(true);
+});
+memberMaxInput.addEventListener("input", () => {
+  renderResults(true);
 });
