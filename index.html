@@ -1,48 +1,46 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-<title>LINEオープンチャット検索</title>
-<link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>LINEオープンチャット検索</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <header>
+    <h1 id="logo">OpenChat Search</h1>
+  </header>
 
-<header>
-  <h1 id="logo">OpenChat Search</h1>
-</header>
+  <section id="searchSection">
+    <input type="text" id="keywordInput" placeholder="検索ワードを入力" autocomplete="off" />
+    <button id="searchBtn">検索</button>
+  </section>
 
-<section id="searchSection">
-  <input type="text" id="keywordInput" placeholder="検索ワードを入力" autocomplete="off" />
-  <button id="searchBtn">検索</button>
-</section>
+  <section id="filterSection">
+    <label>
+      メンバー数（人）:
+      <input type="number" id="memberMin" min="0" placeholder="最小" />
+      ～ 
+      <input type="number" id="memberMax" min="0" placeholder="最大" />
+    </label>
+  </section>
 
-<section id="filterSection">
-  <label>
-    メンバー数（人）:
-    <input type="number" id="memberMin" min="0" placeholder="最小" />
-    ～
-    <input type="number" id="memberMax" min="0" placeholder="最大" />
-  </label>
-</section>
+  <div id="loading" class="hidden">
+    <div class="spinner"></div>
+    <span>検索中...</span>
+  </div>
 
-<div id="loading" class="hidden">
-  <div class="spinner"></div>
-  <span>検索中...</span>
-</div>
+  <div id="resultCount"></div>
+  <section id="results"></section>
+  <button id="loadMoreBtn" class="hidden">もっと表示</button>
 
-<div id="resultCount"></div>
-
-<section id="results"></section>
-
-<button id="loadMoreBtn" class="hidden">もっと表示</button>
-
-<footer>
-  <p>開発者オープンチャット: 
-    <a href="https://line.me/ti/g2/bPfiOwGTYvpGVRRQJYmI08Jj8_Q2WFhRyJLAhw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default">参加する</a>
-  </p>
-</footer>
-
-<script src="js/search.js"></script>
+  <footer>
+    <p>開発者オープンチャット: 
+      <a href="https://line.me/ti/g2/bPfiOwGTYvpGVRRQJYmI08Jj8_Q2WFhRyJLAhw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default">
+        参加する
+      </a>
+    </p>
+  </footer>
+  <script src="js/search.js"></script>
 </body>
 </html>
