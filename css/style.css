@@ -1,6 +1,7 @@
 * {
   box-sizing: border-box;
-  margin: 0; padding: 0;
+  margin: 0;
+  padding: 0;
 }
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -94,20 +95,6 @@ header {
   border: 1.5px solid #ccc;
   border-radius: 5px;
 }
-#toggleFilterBtn {
-  padding: 0.3rem 0.8rem;
-  background: #008f00;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
-  white-space: nowrap;
-}
-#toggleFilterBtn:hover {
-  background: #006600;
-}
 
 #loading {
   display: flex;
@@ -159,7 +146,6 @@ header {
   display: flex;
   gap: 1rem;
   padding: 0.9rem 1rem;
-  cursor: pointer;
   transition: box-shadow 0.25s ease;
 }
 .room-card:hover {
@@ -200,6 +186,30 @@ header {
   user-select: none;
 }
 
+.join-btn {
+  background: linear-gradient(90deg, #00c300, #00a000);
+  color: white;
+  font-weight: 700;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  transition: background 0.3s ease, transform 0.2s ease;
+  text-decoration: none;
+}
+.join-btn:hover {
+  background: linear-gradient(90deg, #00e000, #00b000);
+  transform: translateY(-1px);
+}
+.join-btn img {
+  width: 18px;
+  height: 18px;
+}
+
 #loadMoreBtn {
   margin: 1rem auto 2rem;
   padding: 0.6rem 2.4rem;
@@ -217,7 +227,6 @@ header {
   background: #007500;
 }
 
-/* フッター */
 footer {
   margin-top: auto;
   font-size: 0.9rem;
@@ -236,7 +245,6 @@ footer a:hover {
   text-decoration: underline;
 }
 
-/* レスポンシブ */
 @media (max-width: 600px) {
   body {
     font-size: 14px;
@@ -260,20 +268,6 @@ footer a:hover {
     gap: 0.5rem;
     align-items: stretch;
   }
-  #filterSection label {
-    font-size: 0.95rem;
-    flex-grow: 0;
-  }
-  #filterSection input[type="number"] {
-    width: 100%;
-    font-size: 1rem;
-    padding: 0.4rem 0.6rem;
-  }
-  #toggleFilterBtn {
-    font-size: 1rem;
-    padding: 0.45rem 0.7rem;
-    width: 100%;
-  }
   #results {
     justify-content: center;
   }
@@ -287,22 +281,5 @@ footer a:hover {
     width: 56px;
     height: 56px;
     margin-bottom: 0.5rem;
-  }
-  .room-name {
-    font-size: 1.1rem;
-  }
-  .room-desc {
-    font-size: 0.8rem;
-    max-height: 3.6em;
-  }
-  .room-members {
-    font-size: 0.85rem;
-  }
-  #loadMoreBtn {
-    font-size: 1rem;
-    padding: 0.5rem 1.8rem;
-  }
-  #loading {
-    font-size: 1.1rem;
   }
 }
