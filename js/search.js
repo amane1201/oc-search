@@ -73,7 +73,6 @@ function createCard(item) {
         <div class="room-members">人数: ${item.memberCount}</div>
       </div>
       <a class="join-btn" href="line://square/join?emid=${item.square.emid}">
-        <img src="https://scdn.line-apps.com/n/line_add_friends/btn/ja.png" alt="LINE">
         開く
       </a>
     </div>
