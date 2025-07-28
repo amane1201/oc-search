@@ -1,24 +1,48 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LINEオープンチャット検索</title>
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>LINEオープンチャット検索</title>
+<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <h1>LINEオープンチャット検索</h1>
 
-  <div id="search-container">
-    <input type="text" id="keyword" placeholder="検索ワードを入力" />
-    <button id="searchBtn">検索</button>
-  </div>
+<header>
+  <h1 id="logo">OpenChat Search</h1>
+</header>
 
-  <div id="scrollProgress"></div>
+<section id="searchSection">
+  <input type="text" id="keywordInput" placeholder="検索ワードを入力" autocomplete="off" />
+  <button id="searchBtn">検索</button>
+</section>
 
-  <div id="results"></div>
-  <button id="loadMoreBtn" style="display:none;">もっと表示</button>
+<section id="filterSection">
+  <label>
+    メンバー数（人）:
+    <input type="number" id="memberMin" min="0" placeholder="最小" />
+    ～
+    <input type="number" id="memberMax" min="0" placeholder="最大" />
+  </label>
+</section>
 
-  <script src="js/search.js"></script>
+<div id="loading" class="hidden">
+  <div class="spinner"></div>
+  <span>検索中...</span>
+</div>
+
+<div id="resultCount"></div>
+
+<section id="results"></section>
+
+<button id="loadMoreBtn" class="hidden">もっと表示</button>
+
+<footer>
+  <p>開発者オープンチャット: 
+    <a href="https://line.me/ti/g2/bPfiOwGTYvpGVRRQJYmI08Jj8_Q2WFhRyJLAhw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default">参加する</a>
+  </p>
+</footer>
+
+<script src="js/search.js"></script>
 </body>
 </html>
